@@ -43,11 +43,26 @@ spec:
             - --listen-addr
             - {{ .Values.config.listenAddr | quote }}
           env:
+            {{- if or .Values.mgmt.username .Values.mgmt.existingSecret }}
+            - name: PERTISK_MGMT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kos-scaler.secretName" . }}
+                  key: {{ .Values.mgmt.usernameKey }}
+                  optional: true
+            - name: PERTISK_MGMT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kos-scaler.secretName" . }}
+                  key: {{ .Values.mgmt.passwordKey }}
+                  optional: true
+            {{- end }}
             - name: PERTISK_MGMT_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: {{ include "kos-scaler.secretName" . }}
-                  key: {{ .Values.mgmt.secretKey }}
+                  key: {{ .Values.mgmt.tokenKey }}
+                  optional: true
             - name: KOS_SCALER_STATE_DIR
               value: {{ .Values.stateDir | quote }}
           ports:

@@ -27,17 +27,20 @@ This is node autoscaling. It complements, rather than replaces, Kubernetes HPA.
 ## Prerequisites
 
 1. A reachable `pertisk-mgmt` API.
-2. Management auth as an **admin** or **operator** account. Prefer a pre-issued JWT:
+2. Management auth as an **admin** or **operator** account.
+
+   For long-running installs, use username/password so kos-scaler can refresh
+   JWTs when they expire (default mgmt TTL is 24h):
+
+   ```bash
+   export PERTISK_MGMT_USERNAME='admin'
+   export PERTISK_MGMT_PASSWORD='...'
+   ```
+
+   Or provide a one-shot JWT (expires; requires refresh unless credentials are also set):
 
    ```bash
    export PERTISK_MGMT_TOKEN='...'   # or PERTISK_TOKEN
-   ```
-
-   Or log in at startup:
-
-   ```bash
-   export PERTISK_MGMT_USERNAME='operator'
-   export PERTISK_MGMT_PASSWORD='...'
    ```
 
 3. Kubernetes API access through in-cluster configuration or `KUBECONFIG`.
@@ -49,7 +52,8 @@ This is node autoscaling. It complements, rather than replaces, Kubernetes HPA.
 ```bash
 cp config.example.yaml config.yaml
 # Edit mgmtEndpoint and clusterId.
-export PERTISK_MGMT_TOKEN='...'
+export PERTISK_MGMT_USERNAME='admin'
+export PERTISK_MGMT_PASSWORD='...'
 cargo run -- --config ./config.yaml --kubeconfig /path/to/kubeconfig
 ```
 
@@ -62,23 +66,29 @@ The dashboard and probes listen on `0.0.0.0:8080` by default:
 
 ## Deploy with Helm
 
+Recommended for always-on clusters (auto JWT refresh):
+
 ```bash
 helm upgrade --install kos-scaler ./helm/kos-scaler \
   --namespace kos-scaler --create-namespace \
-  --set mgmt.endpoint=https://mgmt.example.com:8080 \
-  --set mgmt.clusterId=<pertisk-cluster-uuid> \
+  --set mgmt.username=admin \
+  --set mgmt.password=admin
+```
+
+Or a short-lived JWT only (will stop working after mgmt JWT TTL):
+
+```bash
+helm upgrade --install kos-scaler ./helm/kos-scaler \
+  --namespace kos-scaler --create-namespace \
   --set mgmt.token="$PERTISK_MGMT_TOKEN"
 ```
 
-Or point at an existing secret:
+Or point at an existing secret with `username`/`password` keys:
 
 ```bash
 helm upgrade --install kos-scaler ./helm/kos-scaler \
   --namespace kos-scaler --create-namespace \
-  --set mgmt.endpoint=https://mgmt.example.com:8080 \
-  --set mgmt.clusterId=<pertisk-cluster-uuid> \
-  --set mgmt.existingSecret=pertisk-mgmt-token \
-  --set mgmt.secretKey=token
+  --set mgmt.existingSecret=pertisk-mgmt-credentials
 ```
 
 The chart runs a single replica, mounts a PVC at `stateDir` for event history, and

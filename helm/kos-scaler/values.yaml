@@ -4,7 +4,7 @@ replicaCount: 1
 image:
   repository: harbor.tools.pertisk.com/pertisksoft/kos-scaler
   pullPolicy: IfNotPresent
-  tag: "v0.1.0"
+  tag: "0.0.2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -69,13 +69,17 @@ affinity: {}
 
 # Pertisk management API
 mgmt:
-  endpoint: "https://mgmt.example.com:8080"
-  clusterId: ""
-  # Prefer an existing secret that already holds a JWT.
+  endpoint: "https://ptkos.tools.pertisk.com"
+  clusterId: "7ded9bff-8e27-4f75-b3db-53939e48903a"
+  # Prefer username/password so kos-scaler can refresh JWTs automatically.
   existingSecret: ""
-  # Used only when existingSecret is empty.
+  username: ""
+  password: ""
+  # Optional bootstrap JWT; not required when username/password are set.
   token: ""
-  secretKey: "token"
+  usernameKey: "username"
+  passwordKey: "password"
+  tokenKey: "token"
 
 config:
   syncInterval: "30s"
@@ -91,7 +95,7 @@ config:
     scaleUp: "2m"
     scaleDown: "10m"
   workerPool:
-    minSize: 2
+    minSize: 3
     maxSize: 10
     scaleUpPendingPods: 1
     targetUtilization: 0.5
@@ -110,7 +114,7 @@ stateDir: "/var/lib/kos-scaler"
 statePersistence:
   enabled: true
   existingClaim: ""
-  storageClassName: ""
+  storageClassName: "nfs-client"
   accessModes:
     - ReadWriteOnce
   size: 1Gi

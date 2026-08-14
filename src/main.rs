@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
         .context("parsing listen address")?;
 
     let kube = create_kube_client(&args).await?;
-    let mut mgmt = MgmtClient::new(&config.mgmt_endpoint, &config.cluster_id)?;
+    let mgmt = MgmtClient::new(&config.mgmt_endpoint, &config.cluster_id)?;
     mgmt.authenticate().await?;
     let ready = Arc::new(AtomicBool::new(false));
     let scaler = Autoscaler::new(kube, mgmt, config.clone(), ready);
