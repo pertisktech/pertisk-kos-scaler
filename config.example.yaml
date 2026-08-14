@@ -1,0 +1,29 @@
+# Pertisk KOS scaler configuration.
+# clusterId is the UUID returned by GET /api/clusters from pertisk-mgmt.
+mgmtEndpoint: "https://mgmt.example.com:8080"
+clusterId: "replace-with-pertisk-cluster-id"
+
+syncInterval: "30s"
+# Pause when Pertisk is provisioning, removing, or upgrading nodes.
+disableDuringJobs: true
+ignoredNamespaces:
+  - kube-system
+  - kube-public
+  - kube-node-lease
+
+cooldowns:
+  scaleUp: "2m"
+  scaleDown: "10m"
+
+workerPool:
+  minSize: 2
+  maxSize: 10
+  scaleUpPendingPods: 1
+  targetUtilization: 0.5
+  scaleUpThreshold: 0.65
+  scaleDownThreshold: 0.35
+  safeToEvictBuffer: 0.1
+  # Optional overrides for newly created worker VMs.
+  # memory: 4096
+  # cores: 4
+  # diskGb: 40
