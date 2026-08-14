@@ -1,0 +1,99 @@
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "kos-scaler must run as a single replica to avoid concurrent scale actions" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kos-scaler.fullname" . }}
+  labels:
+    {{- include "kos-scaler.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kos-scaler.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "kos-scaler.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "kos-scaler.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config
+            - /etc/kos-scaler/config.yaml
+            - --log-level
+            - {{ .Values.logLevel }}
+            - --listen-addr
+            - {{ .Values.config.listenAddr | quote }}
+          env:
+            - name: PERTISK_MGMT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "kos-scaler.secretName" . }}
+                  key: {{ .Values.mgmt.secretKey }}
+            - name: KOS_SCALER_STATE_DIR
+              value: {{ .Values.stateDir | quote }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kos-scaler
+              readOnly: true
+            - name: state
+              mountPath: {{ .Values.stateDir | quote }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "kos-scaler.fullname" . }}
+        - name: state
+          {{- if .Values.statePersistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ default (printf "%s-state" (include "kos-scaler.fullname" .)) .Values.statePersistence.existingClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

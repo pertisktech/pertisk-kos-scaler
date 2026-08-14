@@ -43,7 +43,9 @@ pub struct MgmtClient {
 
 impl MgmtClient {
     pub fn new(endpoint: &str, cluster_id: &str) -> Result<Self> {
-        let client = Client::builder().build().context("creating management HTTP client")?;
+        let client = Client::builder()
+            .build()
+            .context("creating management HTTP client")?;
         Ok(Self {
             client,
             endpoint: endpoint.trim_end_matches('/').to_owned(),
@@ -56,11 +58,14 @@ impl MgmtClient {
         if self.token.is_some() {
             return Ok(());
         }
-        let username = env_nonempty("PERTISK_MGMT_USERNAME")
-            .ok_or_else(|| anyhow!("set PERTISK_MGMT_TOKEN or PERTISK_MGMT_USERNAME/PERTISK_MGMT_PASSWORD"))?;
-        let password = env_nonempty("PERTISK_MGMT_PASSWORD")
-            .ok_or_else(|| anyhow!("PERTISK_MGMT_PASSWORD is required when using username login"))?;
-        let response = self.client
+        let username = env_nonempty("PERTISK_MGMT_USERNAME").ok_or_else(|| {
+            anyhow!("set PERTISK_MGMT_TOKEN or PERTISK_MGMT_USERNAME/PERTISK_MGMT_PASSWORD")
+        })?;
+        let password = env_nonempty("PERTISK_MGMT_PASSWORD").ok_or_else(|| {
+            anyhow!("PERTISK_MGMT_PASSWORD is required when using username login")
+        })?;
+        let response = self
+            .client
             .post(format!("{}/api/auth/login", self.endpoint))
             .json(&serde_json::json!({ "username": username, "password": password }))
             .send()
@@ -71,18 +76,33 @@ impl MgmtClient {
             let body = response.text().await.unwrap_or_default();
             bail!("pertisk-mgmt login failed: {status}: {body}");
         }
-        let login: LoginResponse = response.json().await.context("parsing pertisk-mgmt login response")?;
+        let login: LoginResponse = response
+            .json()
+            .await
+            .context("parsing pertisk-mgmt login response")?;
         self.token = Some(login.token);
         Ok(())
     }
 
     pub async fn workers(&self) -> Result<Vec<Node>> {
         let response = self.send(self.client.get(self.nodes_url())).await?;
-        let nodes: Vec<Node> = response.json().await.context("parsing management node list")?;
-        Ok(nodes.into_iter().filter(|node| node.role == "worker").collect())
+        let nodes: Vec<Node> = response
+            .json()
+            .await
+            .context("parsing management node list")?;
+        Ok(nodes
+            .into_iter()
+            .filter(|node| node.role == "worker")
+            .collect())
     }
 
-    pub async fn add_workers(&self, count: i32, memory: Option<i64>, cores: Option<i64>, disk_gb: Option<i64>) -> Result<()> {
+    pub async fn add_workers(
+        &self,
+        count: i32,
+        memory: Option<i64>,
+        cores: Option<i64>,
+        disk_gb: Option<i64>,
+    ) -> Result<()> {
         #[derive(Serialize)]
         struct AddWorkers {
             role: &'static str,
@@ -95,22 +115,35 @@ impl MgmtClient {
         while remaining > 0 {
             let batch = remaining.min(MAX_ADD_NODES);
             self.send(self.client.post(self.nodes_url()).json(&AddWorkers {
-                role: "worker", count: batch, memory, cores, disk_gb,
-            })).await?;
+                role: "worker",
+                count: batch,
+                memory,
+                cores,
+                disk_gb,
+            }))
+            .await?;
             remaining -= batch;
         }
         Ok(())
     }
 
     pub async fn remove_worker(&self, node_id: &str) -> Result<()> {
-        self.send(self.client.delete(format!("{}/{}", self.nodes_url(), node_id))).await?;
+        self.send(
+            self.client
+                .delete(format!("{}/{}", self.nodes_url(), node_id)),
+        )
+        .await?;
         Ok(())
     }
 
     pub async fn has_active_lifecycle_job(&self) -> Result<bool> {
         let url = format!("{}/api/clusters/{}/jobs", self.endpoint, self.cluster_id);
-        let jobs: Vec<Job> = self.send(self.client.get(url)).await?
-            .json().await.context("parsing management job list")?;
+        let jobs: Vec<Job> = self
+            .send(self.client.get(url))
+            .await?
+            .json()
+            .await
+            .context("parsing management job list")?;
         Ok(jobs.into_iter().any(is_active_lifecycle_job))
     }
 
@@ -126,7 +159,11 @@ impl MgmtClient {
     }
 
     async fn send(&self, request: RequestBuilder) -> Result<reqwest::Response> {
-        let response = self.authenticated(request).send().await.context("calling pertisk-mgmt")?;
+        let response = self
+            .authenticated(request)
+            .send()
+            .await
+            .context("calling pertisk-mgmt")?;
         if response.status().is_success() {
             return Ok(response);
         }
@@ -141,8 +178,10 @@ fn env_nonempty(name: &str) -> Option<String> {
 }
 
 fn is_active_lifecycle_job(job: Job) -> bool {
-    matches!(job.kind.as_str(), "add_node" | "remove_node" | "upgrade_cluster")
-        && matches!(job.status.as_str(), "queued" | "running")
+    matches!(
+        job.kind.as_str(),
+        "add_node" | "remove_node" | "upgrade_cluster"
+    ) && matches!(job.status.as_str(), "queued" | "running")
 }
 
 #[cfg(test)]

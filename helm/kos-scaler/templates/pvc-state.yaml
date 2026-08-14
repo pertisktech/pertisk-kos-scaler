@@ -1,0 +1,17 @@
+{{- if and .Values.statePersistence.enabled (not .Values.statePersistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "kos-scaler.fullname" . }}-state
+  labels:
+    {{- include "kos-scaler.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.statePersistence.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.statePersistence.size }}
+  {{- with .Values.statePersistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+{{- end }}

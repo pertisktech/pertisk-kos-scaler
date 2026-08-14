@@ -6,6 +6,11 @@ clusterId: "replace-with-pertisk-cluster-id"
 syncInterval: "30s"
 # Pause when Pertisk is provisioning, removing, or upgrading nodes.
 disableDuringJobs: true
+# Max wait for PDB-aware drain before removing the worker anyway.
+drainTimeout: "30m"
+stateDir: "/var/lib/kos-scaler"
+listenAddr: "0.0.0.0:8080"
+maxEvents: 100
 ignoredNamespaces:
   - kube-system
   - kube-public

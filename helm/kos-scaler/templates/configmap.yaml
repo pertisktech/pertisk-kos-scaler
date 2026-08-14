@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "kos-scaler.fullname" . }}
+  labels:
+    {{- include "kos-scaler.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    mgmtEndpoint: {{ required "mgmt.endpoint is required" .Values.mgmt.endpoint | quote }}
+    clusterId: {{ required "mgmt.clusterId is required" .Values.mgmt.clusterId | quote }}
+    syncInterval: {{ .Values.config.syncInterval | quote }}
+    disableDuringJobs: {{ .Values.config.disableDuringJobs }}
+    drainTimeout: {{ .Values.config.drainTimeout | quote }}
+    listenAddr: {{ .Values.config.listenAddr | quote }}
+    stateDir: {{ .Values.stateDir | quote }}
+    maxEvents: {{ .Values.config.maxEvents }}
+    ignoredNamespaces:
+      {{- toYaml .Values.config.ignoredNamespaces | nindent 6 }}
+    cooldowns:
+      scaleUp: {{ .Values.config.cooldowns.scaleUp | quote }}
+      scaleDown: {{ .Values.config.cooldowns.scaleDown | quote }}
+    workerPool:
+      {{- toYaml .Values.config.workerPool | nindent 6 }}
