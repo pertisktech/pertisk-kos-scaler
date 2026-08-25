@@ -79,7 +79,6 @@ make release IMAGE=harbor.tools.pertisk.com/pertisksoft/kos-scaler TAG=0.1.0 \
 `make release` publishes `linux/amd64` and `linux/arm64` through Docker Buildx
 before deploying the chart. Set `PLATFORM` or `PLATFORMS` to customize the
 architectures, along with `RELEASE`, `NAMESPACE`, or `HELM_ARGS` for Helm.
-
 Recommended for always-on clusters (auto JWT refresh):
 
 ```bash
