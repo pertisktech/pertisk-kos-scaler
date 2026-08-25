@@ -64,26 +64,28 @@ The dashboard and probes listen on `0.0.0.0:8080` by default:
 - `GET /healthz` liveness
 - `GET /readyz` readiness after Kubernetes and management auth succeed
 
-## Deploy with Helm
-
-The Makefile provides the common image and release commands:
+## Publish image
 
 ```bash
 make help
-make build IMAGE=harbor.tools.pertisk.com/pertisksoft/kos-scaler TAG=0.1.0
-make release IMAGE=harbor.tools.pertisk.com/pertisksoft/kos-scaler TAG=0.1.0 \
-  HELM_ARGS="--set mgmt.username=admin --set mgmt.password=admin"
+make build TAG=0.1.0
+make release TAG=0.1.0
 ```
 
-`make build` loads a single-platform image locally and defaults to `linux/amd64`.
-`make release` publishes `linux/amd64` and `linux/arm64` through Docker Buildx
-before deploying the chart. Set `PLATFORM` or `PLATFORMS` to customize the
-architectures, along with `RELEASE`, `NAMESPACE`, or `HELM_ARGS` for Helm.
-Recommended for always-on clusters (auto JWT refresh):
+`make build` loads a single-platform image locally (`linux/amd64` by default).
+`make release` pushes a multi-arch image, then packages the Helm chart:
 
 ```bash
-helm upgrade --install kos-scaler ./helm/kos-scaler \
+make release TAG=0.1.0 VERSION=0.1.0
+# writes helm/dist/kos-scaler-0.1.0.tgz
+```
+
+Install from the packaged chart or the local tree:
+
+```bash
+helm upgrade --install kos-scaler ./helm/dist/kos-scaler-0.1.0.tgz \
   --namespace kos-scaler --create-namespace \
+  --set image.tag=0.1.0 \
   --set mgmt.username=admin \
   --set mgmt.password=admin
 ```
