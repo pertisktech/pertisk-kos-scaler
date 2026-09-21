@@ -145,7 +145,7 @@ fn default_down_cooldown() -> Duration {
     Duration::from_secs(600)
 }
 fn default_state_dir() -> String {
-    "/var/lib/kos-scaler".into()
+    "/var/lib/pertisk-kos-scaler".into()
 }
 fn default_listen_addr() -> String {
     "0.0.0.0:8080".into()

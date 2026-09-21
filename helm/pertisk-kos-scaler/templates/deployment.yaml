@@ -37,7 +37,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --config
-            - /etc/kos-scaler/config.yaml
+            - /etc/pertisk-kos-scaler/config.yaml
             - --log-level
             - {{ .Values.logLevel }}
             - --listen-addr
@@ -63,7 +63,7 @@ spec:
                   name: {{ include "pertisk-kos-scaler.secretName" . }}
                   key: {{ .Values.mgmt.tokenKey }}
                   optional: true
-            - name: KOS_SCALER_STATE_DIR
+            - name: PERTISK_KOS_SCALER_STATE_DIR
               value: {{ .Values.stateDir | quote }}
           ports:
             - name: http
@@ -85,7 +85,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - name: config
-              mountPath: /etc/kos-scaler
+              mountPath: /etc/pertisk-kos-scaler
               readOnly: true
             - name: state
               mountPath: {{ .Values.stateDir | quote }}

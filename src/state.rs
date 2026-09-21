@@ -10,8 +10,10 @@ use std::{
 use tracing::{info, warn};
 
 pub const STATE_VERSION: u32 = 1;
-pub const DRAINING_ANNOTATION: &str = "kos-scaler.pertisk.io/draining";
-pub const DRAIN_STARTED_ANNOTATION: &str = "kos-scaler.pertisk.io/drain-started-at";
+pub const DRAINING_ANNOTATION: &str = "pertisk-kos-scaler.pertisk.io/draining";
+pub const DRAIN_STARTED_ANNOTATION: &str = "pertisk-kos-scaler.pertisk.io/drain-started-at";
+pub const LEGACY_DRAINING_ANNOTATION: &str = "kos-scaler.pertisk.io/draining";
+pub const LEGACY_DRAIN_STARTED_ANNOTATION: &str = "kos-scaler.pertisk.io/drain-started-at";
 pub const DEFERRED_EVENT_THROTTLE: Duration = Duration::from_secs(60);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -125,7 +127,7 @@ impl PersistedState {
 }
 
 pub fn state_file(dir: impl AsRef<Path>) -> PathBuf {
-    dir.as_ref().join("kos-scaler-state.json")
+    dir.as_ref().join("pertisk-kos-scaler-state.json")
 }
 
 fn tmp_path(path: &Path) -> PathBuf {
@@ -136,11 +138,16 @@ pub fn parse_drain_started(
     annotations: Option<&BTreeMap<String, String>>,
 ) -> Option<DateTime<Utc>> {
     let annotations = annotations?;
-    if annotations.get(DRAINING_ANNOTATION).map(String::as_str) != Some("true") {
+    let draining = annotations
+        .get(DRAINING_ANNOTATION)
+        .or_else(|| annotations.get(LEGACY_DRAINING_ANNOTATION))
+        .map(String::as_str);
+    if draining != Some("true") {
         return None;
     }
     annotations
         .get(DRAIN_STARTED_ANNOTATION)
+        .or_else(|| annotations.get(LEGACY_DRAIN_STARTED_ANNOTATION))
         .and_then(|value| DateTime::parse_from_rfc3339(value).ok())
         .map(|value| value.with_timezone(&Utc))
 }
@@ -285,7 +292,7 @@ mod tests {
     use std::time::Duration;
 
     fn temp_file(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("kos-scaler-state-{}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!("pertisk-kos-scaler-state-{}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
         dir.join(name)
     }
@@ -386,6 +393,18 @@ mod tests {
         assert_eq!(started.to_rfc3339(), "2026-08-14T12:00:00+00:00");
         annotations.insert(DRAINING_ANNOTATION.into(), "false".into());
         assert!(parse_drain_started(Some(&annotations)).is_none());
+    }
+
+    #[test]
+    fn parse_legacy_drain_annotation() {
+        let mut annotations = BTreeMap::new();
+        annotations.insert(LEGACY_DRAINING_ANNOTATION.into(), "true".into());
+        annotations.insert(
+            LEGACY_DRAIN_STARTED_ANNOTATION.into(),
+            "2026-08-14T12:00:00Z".into(),
+        );
+        let started = parse_drain_started(Some(&annotations)).unwrap();
+        assert_eq!(started.to_rfc3339(), "2026-08-14T12:00:00+00:00");
     }
 
     #[test]

@@ -1,4 +1,4 @@
-IMAGE ?= harbor.tools.pertisk.com/pertisksoft/kos-scaler
+IMAGE ?= registry.tools.thaidevops.co/pertisksoft/pertisk-kos-scaler
 TAG ?= latest
 VERSION ?= 0.1.0
 PLATFORM ?= linux/amd64

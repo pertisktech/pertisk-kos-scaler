@@ -179,7 +179,7 @@ impl MgmtClient {
         if !self.can_refresh() {
             let body = response.text().await.unwrap_or_default();
             bail!(
-                "pertisk-mgmt JWT expired or rejected (401): {body}; set PERTISK_MGMT_USERNAME/PERTISK_MGMT_PASSWORD so kos-scaler can refresh automatically"
+                "pertisk-mgmt JWT expired or rejected (401): {body}; set PERTISK_MGMT_USERNAME/PERTISK_MGMT_PASSWORD so pertisk-kos-scaler can refresh automatically"
             );
         }
         info!("pertisk-mgmt returned 401; refreshing JWT");

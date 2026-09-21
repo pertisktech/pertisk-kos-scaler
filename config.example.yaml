@@ -8,7 +8,7 @@ syncInterval: "30s"
 disableDuringJobs: true
 # Max wait for PDB-aware drain before removing the worker anyway.
 drainTimeout: "30m"
-stateDir: "/var/lib/kos-scaler"
+stateDir: "/var/lib/pertisk-kos-scaler"
 listenAddr: "0.0.0.0:8080"
 maxEvents: 100
 ignoredNamespaces:

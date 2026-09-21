@@ -17,12 +17,12 @@ FROM alpine:3.20
 RUN apk add --no-cache ca-certificates \
     && addgroup -S appgroup \
     && adduser -S appuser -G appgroup \
-    && mkdir -p /var/lib/kos-scaler \
-    && chown appuser:appgroup /var/lib/kos-scaler
+    && mkdir -p /var/lib/pertisk-kos-scaler \
+    && chown appuser:appgroup /var/lib/pertisk-kos-scaler
 
-COPY --from=rust-builder /app/target/release/pertisk-kos-scaler /usr/local/bin/kos-scaler
+COPY --from=rust-builder /app/target/release/pertisk-kos-scaler /usr/local/bin/pertisk-kos-scaler
 
 USER appuser
 ENV RUST_LOG=info
-ENV KOS_SCALER_STATE_DIR=/var/lib/kos-scaler
-ENTRYPOINT ["/usr/local/bin/kos-scaler"]
+ENV PERTISK_KOS_SCALER_STATE_DIR=/var/lib/pertisk-kos-scaler
+ENTRYPOINT ["/usr/local/bin/pertisk-kos-scaler"]

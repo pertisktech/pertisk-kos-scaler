@@ -21,11 +21,11 @@ use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitEx
 
 #[derive(Debug, Parser)]
 #[command(
-    name = "kos-scaler",
+    name = "pertisk-kos-scaler",
     about = "Kubernetes worker-node autoscaler for Pertisk KOS"
 )]
 struct Args {
-    #[arg(short, long, default_value = "/etc/kos-scaler/config.yaml")]
+    #[arg(short, long, default_value = "/etc/pertisk-kos-scaler/config.yaml")]
     config: String,
     #[arg(short, long, default_value = "info", env = "LOG_LEVEL")]
     log_level: String,
@@ -35,7 +35,7 @@ struct Args {
     kube_context: Option<String>,
     #[arg(long, env = "HEALTH_ADDR")]
     listen_addr: Option<String>,
-    #[arg(long, env = "KOS_SCALER_STATE_DIR")]
+    #[arg(long, env = "PERTISK_KOS_SCALER_STATE_DIR")]
     state_dir: Option<String>,
 }
 
@@ -51,7 +51,16 @@ async fn main() -> Result<()> {
     if let Some(listen_addr) = args.listen_addr.clone() {
         config.listen_addr = listen_addr;
     }
-    config.state_dir = resolve_state_dir(args.state_dir.as_deref().unwrap_or(&config.state_dir))?;
+    let state_dir = args
+        .state_dir
+        .clone()
+        .or_else(|| {
+            std::env::var("KOS_SCALER_STATE_DIR")
+                .ok()
+                .filter(|value| !value.is_empty())
+        })
+        .unwrap_or_else(|| config.state_dir.clone());
+    config.state_dir = resolve_state_dir(&state_dir)?;
     let listen_addr: SocketAddr = config
         .listen_addr
         .parse()
@@ -81,7 +90,7 @@ fn resolve_state_dir(configured: &str) -> Result<String> {
     if is_writable_dir(&primary) {
         return Ok(primary.to_string_lossy().into_owned());
     }
-    let fallback = PathBuf::from("/tmp/kos-scaler");
+    let fallback = PathBuf::from("/tmp/pertisk-kos-scaler");
     warn!(
         configured = %primary.display(),
         fallback = %fallback.display(),
@@ -101,7 +110,7 @@ fn is_writable_dir(path: &Path) -> bool {
     if fs::create_dir_all(path).is_err() {
         return false;
     }
-    let probe = path.join(".kos-scaler-state-check");
+    let probe = path.join(".pertisk-kos-scaler-state-check");
     match fs::OpenOptions::new()
         .create(true)
         .write(true)

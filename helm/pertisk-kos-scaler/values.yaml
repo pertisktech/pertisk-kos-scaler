@@ -2,7 +2,7 @@
 replicaCount: 1
 
 image:
-  repository: harbor.tools.pertisk.com/pertisksoft/kos-scaler
+  repository: registry.tools.thaidevops.co/pertisksoft/pertisk-kos-scaler
   pullPolicy: IfNotPresent
   tag: "0.0.2"
 
@@ -109,7 +109,7 @@ config:
 
 logLevel: info
 
-stateDir: "/var/lib/kos-scaler"
+stateDir: "/var/lib/pertisk-kos-scaler"
 
 statePersistence:
   enabled: true

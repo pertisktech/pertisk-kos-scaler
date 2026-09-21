@@ -74,7 +74,7 @@ const DASHBOARD_HTML: &str = r#"<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KOS Scaler</title>
+  <title>Pertisk KOS Scaler</title>
   <style>
     :root {
       --bg: #0c0d18; --card: #131421; --border: #2c2f4c; --text: #e6e7f0;
@@ -105,7 +105,7 @@ const DASHBOARD_HTML: &str = r#"<!doctype html>
 </head>
 <body>
   <div class="shell">
-    <h1 id="title">KOS Scaler</h1>
+    <h1 id="title">Pertisk KOS Scaler</h1>
     <p class="lede" id="endpoint"></p>
     <div class="meta">
       <div class="pill" id="sync">Sync</div>
@@ -163,7 +163,7 @@ const DASHBOARD_HTML: &str = r#"<!doctype html>
       if (empty) empty.style.display = rows.length ? 'none' : 'block';
     }
     function render(data) {
-      document.getElementById('title').textContent = 'KOS ' + (data.config.clusterId || 'scaler');
+      document.getElementById('title').textContent = 'Pertisk KOS ' + (data.config.clusterId || 'scaler');
       document.getElementById('endpoint').textContent = data.config.mgmtEndpoint || '';
       document.getElementById('sync').textContent = 'Sync ' + (data.config.syncInterval || 'n/a');
       document.getElementById('uptime').textContent = 'Uptime ' + age(data.uptimeSec);

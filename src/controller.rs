@@ -3,9 +3,10 @@ use crate::{
     mgmt::{MgmtClient, Node as MgmtNode},
     state::{
         ClusterSnapshot, ConfigSnapshot, DRAIN_STARTED_ANNOTATION, DRAINING_ANNOTATION,
-        DrainSnapshot, NodeSnapshot, PendingPodSnapshot, PersistedState, ScaleDirection,
-        ScaleEvent, ScaleResult, StatusSnapshot, WorkerPoolSnapshot, cooldown_elapsed,
-        drain_timed_out, parse_drain_started, should_record_deferred, state_file,
+        LEGACY_DRAIN_STARTED_ANNOTATION, LEGACY_DRAINING_ANNOTATION, DrainSnapshot, NodeSnapshot,
+        PendingPodSnapshot, PersistedState, ScaleDirection, ScaleEvent, ScaleResult, StatusSnapshot,
+        WorkerPoolSnapshot, cooldown_elapsed, drain_timed_out, parse_drain_started,
+        should_record_deferred, state_file,
     },
 };
 use anyhow::{Context, Result};
@@ -510,6 +511,8 @@ impl Autoscaler {
                         "annotations": {
                             DRAINING_ANNOTATION: serde_json::Value::Null,
                             DRAIN_STARTED_ANNOTATION: serde_json::Value::Null,
+                            LEGACY_DRAINING_ANNOTATION: serde_json::Value::Null,
+                            LEGACY_DRAIN_STARTED_ANNOTATION: serde_json::Value::Null,
                         }
                     },
                     "spec": { "unschedulable": false }
@@ -534,6 +537,8 @@ impl Autoscaler {
                         "annotations": {
                             DRAINING_ANNOTATION: serde_json::Value::Null,
                             DRAIN_STARTED_ANNOTATION: serde_json::Value::Null,
+                            LEGACY_DRAINING_ANNOTATION: serde_json::Value::Null,
+                            LEGACY_DRAIN_STARTED_ANNOTATION: serde_json::Value::Null,
                         }
                     }
                 })),
