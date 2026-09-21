@@ -1,17 +1,17 @@
 {{- if gt (int .Values.replicaCount) 1 }}
-{{- fail "kos-scaler must run as a single replica to avoid concurrent scale actions" }}
+{{- fail "pertisk-kos-scaler must run as a single replica to avoid concurrent scale actions" }}
 {{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kos-scaler.fullname" . }}
+  name: {{ include "pertisk-kos-scaler.fullname" . }}
   labels:
-    {{- include "kos-scaler.labels" . | nindent 4 }}
+    {{- include "pertisk-kos-scaler.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      {{- include "kos-scaler.selectorLabels" . | nindent 6 }}
+      {{- include "pertisk-kos-scaler.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -20,13 +20,13 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "kos-scaler.selectorLabels" . | nindent 8 }}
+        {{- include "pertisk-kos-scaler.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "kos-scaler.serviceAccountName" . }}
+      serviceAccountName: {{ include "pertisk-kos-scaler.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -47,20 +47,20 @@ spec:
             - name: PERTISK_MGMT_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "kos-scaler.secretName" . }}
+                  name: {{ include "pertisk-kos-scaler.secretName" . }}
                   key: {{ .Values.mgmt.usernameKey }}
                   optional: true
             - name: PERTISK_MGMT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "kos-scaler.secretName" . }}
+                  name: {{ include "pertisk-kos-scaler.secretName" . }}
                   key: {{ .Values.mgmt.passwordKey }}
                   optional: true
             {{- end }}
             - name: PERTISK_MGMT_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "kos-scaler.secretName" . }}
+                  name: {{ include "pertisk-kos-scaler.secretName" . }}
                   key: {{ .Values.mgmt.tokenKey }}
                   optional: true
             - name: KOS_SCALER_STATE_DIR
@@ -92,11 +92,11 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: {{ include "kos-scaler.fullname" . }}
+            name: {{ include "pertisk-kos-scaler.fullname" . }}
         - name: state
           {{- if .Values.statePersistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ default (printf "%s-state" (include "kos-scaler.fullname" .)) .Values.statePersistence.existingClaim }}
+            claimName: {{ default (printf "%s-state" (include "pertisk-kos-scaler.fullname" .)) .Values.statePersistence.existingClaim }}
           {{- else }}
           emptyDir: {}
           {{- end }}

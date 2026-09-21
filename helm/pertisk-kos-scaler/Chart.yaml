@@ -1,5 +1,5 @@
 apiVersion: v2
-name: kos-scaler
+name: pertisk-kos-scaler
 description: Kubernetes worker-node autoscaler for Pertisk KOS clusters
 type: application
 version: 0.1.0

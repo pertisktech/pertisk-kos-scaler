@@ -1,4 +1,4 @@
-# Default values for kos-scaler
+# Default values for pertisk-kos-scaler
 replicaCount: 1
 
 image:
@@ -42,7 +42,7 @@ ingress:
   className: ""
   annotations: {}
   hosts:
-    - host: kos-scaler.example.com
+    - host: pertisk-kos-scaler.example.com
       paths:
         - path: /
           pathType: Prefix
@@ -71,7 +71,7 @@ affinity: {}
 mgmt:
   endpoint: "https://ptkos.tools.pertisk.com"
   clusterId: "7ded9bff-8e27-4f75-b3db-53939e48903a"
-  # Prefer username/password so kos-scaler can refresh JWTs automatically.
+  # Prefer username/password so pertisk-kos-scaler can refresh JWTs automatically.
   existingSecret: ""
   username: ""
   password: ""

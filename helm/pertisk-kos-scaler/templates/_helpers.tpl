@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "kos-scaler.name" -}}
+{{- define "pertisk-kos-scaler.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name.
 */}}
-{{- define "kos-scaler.fullname" -}}
+{{- define "pertisk-kos-scaler.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "kos-scaler.chart" -}}
+{{- define "pertisk-kos-scaler.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "kos-scaler.labels" -}}
-helm.sh/chart: {{ include "kos-scaler.chart" . }}
-{{ include "kos-scaler.selectorLabels" . }}
+{{- define "pertisk-kos-scaler.labels" -}}
+helm.sh/chart: {{ include "pertisk-kos-scaler.chart" . }}
+{{ include "pertisk-kos-scaler.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -43,17 +43,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "kos-scaler.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "kos-scaler.name" . }}
+{{- define "pertisk-kos-scaler.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "pertisk-kos-scaler.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "kos-scaler.serviceAccountName" -}}
+{{- define "pertisk-kos-scaler.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "kos-scaler.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "pertisk-kos-scaler.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -62,10 +62,10 @@ Create the name of the service account to use
 {{/*
 Get the secret name containing Pertisk management credentials
 */}}
-{{- define "kos-scaler.secretName" -}}
+{{- define "pertisk-kos-scaler.secretName" -}}
 {{- if .Values.mgmt.existingSecret }}
 {{- .Values.mgmt.existingSecret }}
 {{- else }}
-{{- include "kos-scaler.fullname" . }}-credentials
+{{- include "pertisk-kos-scaler.fullname" . }}-credentials
 {{- end }}
 {{- end }}

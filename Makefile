@@ -3,7 +3,7 @@ TAG ?= latest
 VERSION ?= 0.1.0
 PLATFORM ?= linux/amd64
 PLATFORMS ?= linux/amd64,linux/arm64
-CHART ?= helm/kos-scaler
+CHART ?= helm/pertisk-kos-scaler
 HELM_PACKAGE_DIR ?= helm/dist
 
 .PHONY: help build release

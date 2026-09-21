@@ -2,9 +2,9 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "kos-scaler.fullname" . }}
+  name: {{ include "pertisk-kos-scaler.fullname" . }}
   labels:
-    {{- include "kos-scaler.labels" . | nindent 4 }}
+    {{- include "pertisk-kos-scaler.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["nodes"]
@@ -22,15 +22,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "kos-scaler.fullname" . }}
+  name: {{ include "pertisk-kos-scaler.fullname" . }}
   labels:
-    {{- include "kos-scaler.labels" . | nindent 4 }}
+    {{- include "pertisk-kos-scaler.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "kos-scaler.fullname" . }}
+  name: {{ include "pertisk-kos-scaler.fullname" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ include "kos-scaler.serviceAccountName" . }}
+    name: {{ include "pertisk-kos-scaler.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}
 {{- end }}

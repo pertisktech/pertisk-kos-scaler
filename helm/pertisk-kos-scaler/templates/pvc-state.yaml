@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "kos-scaler.fullname" . }}-state
+  name: {{ include "pertisk-kos-scaler.fullname" . }}-state
   labels:
-    {{- include "kos-scaler.labels" . | nindent 4 }}
+    {{- include "pertisk-kos-scaler.labels" . | nindent 4 }}
 spec:
   accessModes:
     {{- toYaml .Values.statePersistence.accessModes | nindent 4 }}

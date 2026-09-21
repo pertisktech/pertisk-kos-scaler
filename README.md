@@ -6,7 +6,7 @@ The controller reads unschedulable pending pods and requested CPU/memory from
 the Kubernetes API. It adds workers through Pertisk's management API:
 
 ```text
-Kubernetes scheduling pressure → kos-scaler → pertisk-mgmt → hypervisor worker VMs
+Kubernetes scheduling pressure → pertisk-kos-scaler → pertisk-mgmt → hypervisor worker VMs
 ```
 
 This is node autoscaling. It complements, rather than replaces, Kubernetes HPA.
@@ -29,7 +29,7 @@ This is node autoscaling. It complements, rather than replaces, Kubernetes HPA.
 1. A reachable `pertisk-mgmt` API.
 2. Management auth as an **admin** or **operator** account.
 
-   For long-running installs, use username/password so kos-scaler can refresh
+   For long-running installs, use username/password so pertisk-kos-scaler can refresh
    JWTs when they expire (default mgmt TTL is 24h):
 
    ```bash
@@ -77,14 +77,14 @@ make release TAG=0.1.0
 
 ```bash
 make release TAG=0.1.0 VERSION=0.1.0
-# writes helm/dist/kos-scaler-0.1.0.tgz
+# writes helm/dist/pertisk-kos-scaler-0.1.0.tgz
 ```
 
 Install from the packaged chart or the local tree:
 
 ```bash
-helm upgrade --install kos-scaler ./helm/dist/kos-scaler-0.1.0.tgz \
-  --namespace kos-scaler --create-namespace \
+helm upgrade --install pertisk-kos-scaler ./helm/dist/pertisk-kos-scaler-0.1.0.tgz \
+  --namespace pertisk-kos-scaler --create-namespace \
   --set image.tag=0.1.0 \
   --set mgmt.username=admin \
   --set mgmt.password=admin
@@ -93,16 +93,16 @@ helm upgrade --install kos-scaler ./helm/dist/kos-scaler-0.1.0.tgz \
 Or a short-lived JWT only (will stop working after mgmt JWT TTL):
 
 ```bash
-helm upgrade --install kos-scaler ./helm/kos-scaler \
-  --namespace kos-scaler --create-namespace \
+helm upgrade --install pertisk-kos-scaler ./helm/pertisk-kos-scaler \
+  --namespace pertisk-kos-scaler --create-namespace \
   --set mgmt.token="$PERTISK_MGMT_TOKEN"
 ```
 
 Or point at an existing secret with `username`/`password` keys:
 
 ```bash
-helm upgrade --install kos-scaler ./helm/kos-scaler \
-  --namespace kos-scaler --create-namespace \
+helm upgrade --install pertisk-kos-scaler ./helm/pertisk-kos-scaler \
+  --namespace pertisk-kos-scaler --create-namespace \
   --set mgmt.existingSecret=pertisk-mgmt-credentials
 ```
 
