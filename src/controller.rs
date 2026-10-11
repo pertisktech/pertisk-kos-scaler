@@ -145,8 +145,11 @@ impl Autoscaler {
             return Ok(());
         }
 
+        // Use cluster-wide request utilization. A single hot node with empty
+        // siblings is a packing imbalance, not a shortage of worker VMs.
+        let cluster_util = cluster_utilization(&load);
         let needs_capacity = load.pending_pods >= pool.scale_up_pending_pods
-            || load.max_utilization >= pool.scale_up_threshold;
+            || cluster_util >= pool.scale_up_threshold;
         if needs_capacity && current < pool.max_size {
             if !self.can_scale_up().await {
                 self.record_deferred(
@@ -157,22 +160,20 @@ impl Autoscaler {
                 )
                 .await;
             } else {
-                let requested = if load.pending_pods > 0 {
-                    (load.pending_pods + pool.scale_up_pending_pods - 1)
-                        / pool.scale_up_pending_pods
-                } else {
-                    ((current as f64 * load.max_utilization / pool.target_utilization).ceil()
-                        as i32
-                        - current)
-                        .max(1)
-                };
-                let count = requested.min(pool.max_size - current);
-                self.scale_up(
+                let count = scale_up_count(
                     current,
-                    count,
-                    "pending pods or request utilization requires capacity",
-                )
-                .await?;
+                    pool.max_size,
+                    load.pending_pods,
+                    pool.scale_up_pending_pods,
+                    cluster_util,
+                    pool.target_utilization,
+                );
+                let reason = if load.pending_pods >= pool.scale_up_pending_pods {
+                    "unschedulable pending pods require capacity"
+                } else {
+                    "cluster request utilization requires capacity"
+                };
+                self.scale_up(current, count, reason).await?;
                 return Ok(());
             }
         }
@@ -196,7 +197,7 @@ impl Autoscaler {
             .await;
             return Ok(());
         }
-        if load.max_utilization >= pool.scale_down_threshold {
+        if cluster_utilization(&load) >= pool.scale_down_threshold {
             return Ok(());
         }
         if !self.can_scale_down().await {
@@ -806,6 +807,34 @@ impl Autoscaler {
     }
 }
 
+fn cluster_utilization(load: &ClusterLoad) -> f64 {
+    load.cpu_utilization.max(load.memory_utilization)
+}
+
+/// Workers to add so cluster request utilization moves toward `target`.
+/// Pending unschedulable pods take priority over the utilization estimate.
+fn scale_up_count(
+    current: i32,
+    max_size: i32,
+    pending: i32,
+    pending_batch: i32,
+    cluster_util: f64,
+    target: f64,
+) -> i32 {
+    if current >= max_size {
+        return 0;
+    }
+    let requested = if pending > 0 {
+        let batch = pending_batch.max(1);
+        (pending + batch - 1) / batch
+    } else if target <= 0.0 {
+        1
+    } else {
+        ((current as f64 * cluster_util / target).ceil() as i32 - current).max(0)
+    };
+    requested.min(max_size - current).max(0)
+}
+
 fn should_skip_drain(pod: &Pod) -> bool {
     if pod.metadata.deletion_timestamp.is_some() {
         return true;
@@ -921,5 +950,23 @@ mod tests {
             .map(|(name, _)| name.as_str());
         assert_eq!(selected, Some("older"));
         assert!(!drain_timed_out(older, Duration::from_secs(1800), newer));
+    }
+
+    #[test]
+    fn imbalanced_node_does_not_scale_up_when_cluster_has_room() {
+        // lab-ha-13900hx: one worker at ~72% requests, siblings empty,
+        // cluster-wide requests ~24% of 3 workers. Peak-node math asked for 2 VMs.
+        let cluster_util = 0.24;
+        let hottest_node = 0.725;
+        assert!(cluster_util < 0.65);
+        assert!(cluster_util < 0.35);
+        assert_eq!(scale_up_count(3, 5, 0, 1, hottest_node, 0.5), 2);
+        assert_eq!(scale_up_count(3, 5, 0, 1, cluster_util, 0.5), 0);
+    }
+
+    #[test]
+    fn pending_pods_still_request_workers() {
+        assert_eq!(scale_up_count(3, 10, 2, 1, 0.1, 0.5), 2);
+        assert_eq!(scale_up_count(5, 5, 4, 1, 0.9, 0.5), 0);
     }
 }
